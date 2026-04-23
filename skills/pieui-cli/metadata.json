@@ -1,0 +1,6 @@
+{
+  "author": "pie-team",
+  "version": "1.0.0",
+  "description": "TypeScript pieui CLI — Next.js bootstrapping, card/page generation, remote sync, and auth.",
+  "tags": ["typescript", "bun", "pieui", "cli", "nextjs", "cards", "pages"]
+}

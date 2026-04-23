@@ -1,0 +1,6 @@
+{
+  "author": "pie-team",
+  "version": "1.0.0",
+  "description": "Python pie CLI — project scaffolding, cards, pages, remote sync, and auth.",
+  "tags": ["python", "pie", "cli", "cards", "pages"]
+}
