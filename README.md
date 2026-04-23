@@ -1,6 +1,16 @@
 # pie-skills
 
+![skills](https://img.shields.io/badge/skills-2-7F77DD?style=flat-square) ![agents](https://img.shields.io/badge/agents-Claude%20%7C%20Cursor%20%7C%20Codex-5DCAA5?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-B4B2A9?style=flat-square)
+
 Agent skills for the Pie ecosystem CLIs — `pie` (Python backend) and `pieui` (TypeScript/Next.js frontend).
+
+```bash
+# skill.fish
+npx skillfish add Swarm-AI-Labs/pie-skills
+
+# skills CLI
+npx skills add git@github.com:Swarm-AI-Labs/pie-skills.git
+```
 
 ---
 

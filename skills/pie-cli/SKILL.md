@@ -1,6 +1,6 @@
 ---
 name: pie-cli
-description: Use for tasks involving the Python pie CLI, including project scaffolding, web/page/card commands, remote component sync, and login/config troubleshooting.
+description: Python pie CLI — scaffold projects, manage cards and pages, sync with remote storage.
 metadata:
   author: pie-team
   version: 1.0.0
