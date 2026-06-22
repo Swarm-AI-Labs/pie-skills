@@ -225,7 +225,7 @@ Add `--io` to wire in Socket.IO support. Add `--ajax` for AJAX form submission. 
 
 **File:** `skills/pieui-cli/SKILL.md`
 
-The `pieui` CLI is the TypeScript/Bun-side tool for the Pie framework. It bootstraps Next.js applications, scaffolds card and page components, manages the local component registry, syncs components with remote storage, and generates the build manifest.
+The `pieui` CLI is the TypeScript/Bun-side tool for the Pie framework. It bootstraps Next.js applications, scaffolds card and page components, manages the local component registry, syncs components with remote storage, generates Storybook previews, checks TS/Python metadata sync, runs a standalone preview registry harness, and generates the build manifest.
 
 ### When to use
 
@@ -236,7 +236,7 @@ Use `pieui-cli` when the user is working in a Next.js or Bun project that uses `
 | Requirement | Detail |
 |---|---|
 | Bun | Any recent version |
-| Next.js project | Required for `card add`, `page add`, and `list` commands |
+| Next.js project | Required for `card add`, `page add`, `card list`, preview, and registry commands |
 | Auth | Run `pieui login` or ensure env/config is present for remote commands |
 
 ### Commands
@@ -247,6 +247,7 @@ Use `pieui-cli` when the user is working in a Next.js or Bun project that uses `
 bunx pieui create my-app           # scaffold a Next.js + PieUI app
 bunx pieui create-pie-app my-app   # alias
 bunx pieui create-pieui my-app     # alias
+bunx pieui self-upgrade --pm bun   # upgrade global CLI
 ```
 
 #### Initialisation
@@ -264,10 +265,14 @@ Cards are React components that receive typed props and optionally connect to re
 bunx pieui card add simple StatusCard
 bunx pieui card add complex FeedCard
 bunx pieui card add simple-container LayoutCard
-bunx pieui card add complex-container DashCard --io --ajax
+bunx pieui card add complex-container DashCard --io --ajax --input
 
 # Type omitted → defaults to complex-container
 bunx pieui card add MyCard
+
+# Port from backend metadata (.py file, PieMetadata JSON, or configured backend card name)
+bunx pieui card add MyCard --from ../ai-exchange-bot/pages/components/my_card.py
+bunx pieui card add MyCard --from MyCard
 ```
 
 Generated files are placed under `piecomponents/` by convention.
@@ -277,22 +282,40 @@ Generated files are placed under `piecomponents/` by convention.
 ```bash
 bunx pieui page add chat           # writes app/chat/page.tsx
 bunx pieui page add admin/users    # writes app/admin/users/page.tsx
+bunx pieui page view chat          # print app/chat/page.tsx
+bunx pieui page ajax chat add refresh
+bunx pieui page ajax chat remove refresh
 ```
 
 #### Local component inspection
 
 ```bash
-bunx pieui list                            # list all registered components
-bunx pieui list all                        # explicit filter (same as no filter)
-bunx pieui list simple                     # filter by type
-bunx pieui list complex
-bunx pieui list simple-container
-bunx pieui list complex-container
+bunx pieui card list                       # list all registered components
+bunx pieui card list all                   # explicit filter (same as no filter)
+bunx pieui card list simple                # filter by type
+bunx pieui card list complex
+bunx pieui card list simple-container
+bunx pieui card list complex-container
 
-bunx pieui list-events StatusCard          # list IO events for a component
-bunx pieui add-event StatusCard refresh    # add an IO event handler
-bunx pieui remove StatusCard               # delete a component
+bunx pieui card view StatusCard            # print props, ajax, IO, and events
+bunx pieui card list-events StatusCard     # list IO events for a component
+bunx pieui card add-event StatusCard refresh
+bunx pieui card remove StatusCard          # delete a component
 ```
+
+#### Storybook previews and metadata sync
+
+```bash
+bunx pieui card add-story StatusCard
+bunx pieui card add-story StatusCard --force
+bunx pieui card generate-preview StatusCard --out artifacts/status-card.png
+
+bunx pieui card dump-metadata StatusCard
+bunx pieui card dump-metadata StatusCard --out /tmp/status-card.metadata.json
+bunx pieui card check-sync StatusCard
+```
+
+`dump-metadata` emits a `{ "typescript": ... }` envelope. `check-sync` delegates to backend `pie card check-sync` and needs valid `.pie/config.json` backend paths.
 
 #### Remote storage
 
@@ -302,8 +325,21 @@ bunx pieui card remote list
 bunx pieui card remote list --user alice --project demo
 bunx pieui card remote push StatusCard
 bunx pieui card remote pull StatusCard
+bunx pieui card remote pull StatusCard@5
+bunx pieui card remote history StatusCard --page 2 --per-page 20 --from 3 --to 7
+bunx pieui card remote public StatusCard   # visibility change — requires explicit intent
+bunx pieui card remote private StatusCard  # visibility change — requires explicit intent
 bunx pieui card remote remove StatusCard   # destructive — requires explicit intent
 ```
+
+#### Preview registry harness
+
+```bash
+bunx pieui registry dev --port 3210 --api-server http://127.0.0.1:8000
+bunx pieui registry build --out public/pie-registry
+```
+
+The registry harness is generated under `.pie/registry/` and mounts `PiePreviewRoot` without the app layout.
 
 #### Build manifest
 
@@ -325,25 +361,39 @@ bunx pieui postbuild --src-dir src --out-dir dist --append   # merge into existi
 
 **Default:** when the type argument is omitted, `card add` defaults to `complex-container`.
 
-Add `--io` for Socket.IO support. Add `--ajax` for AJAX form submission. Both flags are combinable.
+Add `--io` for realtime support, `--ajax` for AJAX form submission, and `--input` for an input card variant with a typed `stored` prop. These flags are combinable.
 
 ### List filters
 
-The `list` command accepts these filters: `all` (default), `simple`, `complex`, `simple-container`, `complex-container`.
+The `card list` command accepts these filters: `all` (default), `simple`, `complex`, `simple-container`, `complex-container`.
+
+### Debugging
+
+There is no standalone `pieui debug` command in current PieUI. For consumer debugging, enable rendering logs:
+
+```bash
+PIE_ENABLE_RENDERING_LOG=true NEXT_PUBLIC_PIE_ENABLE_RENDERING_LOG=true bun dev
+```
+
+The PieUI source repo also contains `build:debug` scripts for non-minified local package builds.
 
 ### Workflow
 
-1. Identify the goal: app bootstrap, scaffolding, remote sync, or diagnostics.
+1. Identify the goal: app bootstrap, scaffolding, metadata sync, preview registry, remote sync, or diagnostics.
 2. Run the narrowest command with explicit arguments.
 3. Validate generated files and command output.
-4. For remote operations, confirm user/project scope before push or remove.
-5. Report changed files and suggest the follow-up command.
+4. For metadata sync, inspect `.pie/config.json` before assuming backend paths are valid.
+5. For remote operations, confirm user/project scope before push, remove, public, or private.
+6. Report changed files and suggest the follow-up command.
 
 ### Safety rules
 
 - `card remote remove` is destructive — always require explicit user confirmation.
+- `card remote public` and `card remote private` change sharing visibility — require explicit user confirmation.
 - `add-event` edits component method maps — verify the target component exists first.
+- `page ajax` delegates to backend `pie` and requires configured backend page paths.
 - Do not run `postbuild --append` unless the user explicitly asks for built-in component merging.
+- Do not commit machine-specific `.pie/config.json` backend paths unless the team explicitly wants that.
 
 ---
 

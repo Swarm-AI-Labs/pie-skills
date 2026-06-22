@@ -211,10 +211,14 @@ EOF
 | `pieui create\|create-pie-app\|create-pieui` | All 3 aliases present |
 | `pieui init` | Present |
 | `pieui card add` (all 4 types + default) | All 4 + no-type example present |
-| `pieui page add` | Present |
-| `pieui list` (all 5 filters) | All 5 filters present |
-| `pieui list-events\|add-event\|remove` | All present |
-| `pieui card remote push\|pull\|list\|remove` | All 4 present |
+| `pieui page add\|view\|ajax` | Present |
+| `pieui card list` (all 5 filters) | All 5 filters present |
+| `pieui card list-events\|add-event\|view\|remove` | All present |
+| `pieui card add-story\|generate-preview` | Both present |
+| `pieui card dump-metadata\|check-sync` | Both present |
+| `pieui card remote push\|pull\|list\|remove\|history\|public\|private` | All 7 present |
+| `pieui registry dev\|build` | Both present |
+| `pieui self-upgrade` | Present |
 | `pieui postbuild` (with and without `--append`) | Both variants present |
 | `pieui login` | Present |
 
@@ -284,7 +288,7 @@ For each prompt below, confirm the agent reads `pie-cli/SKILL.md` or `pieui-cli/
 | T3-01 | "create a new card called TradeCard" (in Python pie project) | `pie-cli` |
 | T3-02 | "add a StatusCard component" (in Next.js pieui project) | `pieui-cli` |
 | T3-03 | "run `uv run pie card list`" | `pie-cli` |
-| T3-04 | "run `bunx pieui list`" | `pieui-cli` |
+| T3-04 | "run `bunx pieui card list`" | `pieui-cli` |
 | T3-05 | "push my card to remote storage" (pie Python context) | `pie-cli` |
 | T3-06 | "push my card to remote storage" (Next.js context) | `pieui-cli` |
 | T3-07 | "what card types are available?" (pie context) | `pie-cli` — should list `simple`, `complex`, `container`, `complex-container` |
@@ -485,35 +489,35 @@ grep "content" piecomponents/DefaultCard.tsx
 
 ---
 
-### T5-06 — `pieui list` — all filter variants
+### T5-06 — `pieui card list` — all filter variants
 
 ```bash
-bunx pieui list
-bunx pieui list all
-bunx pieui list simple
-bunx pieui list complex
-bunx pieui list simple-container
-bunx pieui list complex-container
+bunx pieui card list
+bunx pieui card list all
+bunx pieui card list simple
+bunx pieui card list complex
+bunx pieui card list simple-container
+bunx pieui card list complex-container
 # Expected: each exits 0. Filtered variants return only matching types.
 ```
 
 ---
 
-### T5-07 — `pieui list-events` and `pieui add-event`
+### T5-07 — `pieui card list-events` and `pieui card add-event`
 
 ```bash
-bunx pieui list-events DashCard
-bunx pieui add-event DashCard refresh
-bunx pieui list-events DashCard
+bunx pieui card list-events DashCard
+bunx pieui card add-event DashCard refresh
+bunx pieui card list-events DashCard
 # Expected: 'refresh' event appears in second list-events output
 ```
 
 ---
 
-### T5-08 — `pieui remove`
+### T5-08 — `pieui card remove`
 
 ```bash
-bunx pieui remove DefaultCard
+bunx pieui card remove DefaultCard
 ls piecomponents/ | grep DefaultCard
 # Expected: DefaultCard no longer present
 ```
@@ -692,10 +696,10 @@ done
 cd /tmp/smoke-pieui-app
 
 commands=(
-  "list"
-  "list all"
-  "list simple"
-  "list-events StatusCard"
+  "card list"
+  "card list all"
+  "card list simple"
+  "card list-events StatusCard"
 )
 
 for cmd in "${commands[@]}"; do
