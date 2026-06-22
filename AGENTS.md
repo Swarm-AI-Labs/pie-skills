@@ -12,7 +12,7 @@ npx skills add git@github.com:<owner>/pie-skills.git
 | Skill | Description |
 |---|---|
 | `pie-cli` | Python `pie` CLI — project scaffolding, web/page/card commands, remote component sync, and login/config. |
-| `pieui-cli` | TypeScript `pieui` CLI — Next.js app bootstrapping, card/page generation, component registry, remote sync, and login. |
+| `pieui-cli` | TypeScript `pieui` CLI — Next.js app bootstrapping, card/page generation, Storybook previews, TS/Python metadata sync, preview registry, remote sync, debug logging, self-upgrade, and login. |
 
 ## When to use each skill
 

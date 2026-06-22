@@ -18,6 +18,8 @@ bunx pieui --help
 bunx pieui create my-app
 bunx pieui create-pie-app my-pie-app
 bunx pieui create-pieui my-pie-app
+bunx pieui self-upgrade
+bunx pieui self-upgrade --pm bun
 ```
 
 ## Init + generation
@@ -36,13 +38,20 @@ bunx pieui card add complex FeedCard
 # simple-container — data + single content slot
 bunx pieui card add simple-container LayoutCard
 
-# complex-container — data + content[] array (default); add --io / --ajax as needed
-bunx pieui card add complex-container DashCard --io --ajax
+# complex-container — data + content[] array (default); add --io / --ajax / --input as needed
+bunx pieui card add complex-container DashCard --io --ajax --input
 
 # omit type → defaults to complex-container
 bunx pieui card add MyCard
 
+# port from a backend Python card, metadata JSON file, or configured backend card name
+bunx pieui card add MyCard --from ../ai-exchange-bot/pages/components/my_card.py
+bunx pieui card add MyCard --from MyCard
+
 bunx pieui page add chat
+bunx pieui page view chat
+bunx pieui page ajax chat add refresh
+bunx pieui page ajax chat remove refresh
 ```
 
 ## Local inspection and edits
@@ -50,16 +59,38 @@ bunx pieui page add chat
 Valid list filters: `all` (default), `simple`, `complex`, `simple-container`, `complex-container`.
 
 ```bash
-bunx pieui list
-bunx pieui list all
-bunx pieui list simple
-bunx pieui list complex
-bunx pieui list simple-container
-bunx pieui list complex-container
-bunx pieui list-events StatusCard
-bunx pieui add-event StatusCard refresh
-bunx pieui remove StatusCard
+bunx pieui card list
+bunx pieui card list all
+bunx pieui card list simple
+bunx pieui card list complex
+bunx pieui card list simple-container
+bunx pieui card list complex-container
+bunx pieui card view StatusCard
+bunx pieui card list-events StatusCard
+bunx pieui card add-event StatusCard refresh
+bunx pieui card remove StatusCard
 ```
+
+## Storybook previews
+
+```bash
+bunx pieui card add-story StatusCard
+bunx pieui card add-story StatusCard --force
+bunx pieui card generate-preview StatusCard
+bunx pieui card generate-preview StatusCard --out artifacts/status-card.png
+```
+
+`generate-preview` expects a Storybook story. It uses a running Storybook on port 6006 or starts `bun run storybook` temporarily.
+
+## Metadata and TS/Python sync
+
+```bash
+bunx pieui card dump-metadata StatusCard
+bunx pieui card dump-metadata StatusCard --out /tmp/status-card.metadata.json
+bunx pieui card check-sync StatusCard
+```
+
+`dump-metadata` writes a `{ "typescript": ... }` envelope. `check-sync` delegates to backend `pie card check-sync`; verify `.pie/config.json` backend paths first.
 
 ## Remote storage
 
@@ -69,8 +100,26 @@ bunx pieui card remote list
 bunx pieui card remote list --user alice --project demo
 bunx pieui card remote push StatusCard
 bunx pieui card remote pull StatusCard
+bunx pieui card remote pull StatusCard@5
+bunx pieui card remote history StatusCard
+bunx pieui card remote history StatusCard --page 2 --per-page 20 --from 3 --to 7
+bunx pieui card remote public StatusCard
+bunx pieui card remote private StatusCard
 bunx pieui card remote remove StatusCard
 ```
+
+`public` makes the component readable as `r/<user>/<Name>`; `private` reverses that. Treat `remove`, `public`, and `private` as explicit-intent operations.
+
+## Preview registry harness
+
+```bash
+bunx pieui registry dev
+bunx pieui registry dev --port 3210 --api-server http://127.0.0.1:8000
+bunx pieui registry build
+bunx pieui registry build --out public/pie-registry
+```
+
+The registry harness is generated under `.pie/registry/` and mounts `PiePreviewRoot` without the app layout.
 
 ## Build manifest
 
@@ -79,8 +128,16 @@ bunx pieui postbuild --src-dir src --out-dir dist
 bunx pieui postbuild --src-dir src --out-dir dist --append
 ```
 
+## Debugging
+
+```bash
+PIE_ENABLE_RENDERING_LOG=true NEXT_PUBLIC_PIE_ENABLE_RENDERING_LOG=true bun dev
+```
+
+Current PieUI does not expose a standalone `pieui debug` command. Debug support is an env logging mode for consumers and `build:debug` scripts inside the PieUI source repo.
+
 ## Notes
 
 - `card add` default type is `complex-container` when omitted.
 - `page add` expects a path and writes `app/<path>/page.tsx`.
-
+- `self-upgrade` upgrades a globally installed `@swarm.ing/pieui` CLI.
