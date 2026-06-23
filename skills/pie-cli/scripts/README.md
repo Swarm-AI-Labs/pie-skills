@@ -1,10 +1,7 @@
 # pie-cli scripts
 
-Helper automation scripts for the `pie` CLI skill.
+Helper automation scripts for the `pie` CLI skill. None yet — add shell/Python helpers here
+(e.g. `uv sync` env setup, batch `card remote push`) as the need arises.
 
-Place any shell or Python helper scripts here (e.g. environment setup, batch operations).
-
-## Examples of scripts to add
-
-- `setup-env.sh` — verify Python version and install deps with `uv sync`
-- `batch-push.sh` — push all local cards to remote storage
+Repo-level tooling lives at the root: `scripts/check-cheatsheet-sync.sh` (advisory cheatsheet
+drift check; see `TESTING.md` T8-00).

@@ -50,7 +50,7 @@ Use `--io` to add socket IO support, `--ajax` to add AJAX support, and `--input`
 
 ## Prerequisites Checklist
 
-1. Python `>=3.14`.
+1. Python `>=3.10` (pyproject minimum; the pie repo pins 3.14 for dev).
 2. Dependencies installed with `uv sync`.
 3. `.env` loaded when storage or auth is involved.
 

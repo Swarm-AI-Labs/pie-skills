@@ -3,7 +3,7 @@
 Run from the `pie` repository (or any backend project with `pie` installed):
 
 ```bash
-uv sync --python 3.14
+uv sync            # pyproject requires Python >=3.10 (pie repo pins 3.14 for dev)
 uv run pie --help
 ```
 

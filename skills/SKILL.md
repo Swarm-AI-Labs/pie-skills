@@ -542,13 +542,55 @@ PIE_USER_ID=username PIE_API_KEY=rp-xxx PIE_PROJECT=my-project \
 
 ---
 
-### 4.11 `web` / `self-upgrade`
+### 4.11 `web` / `init` / `self-upgrade`
+
+`pie web` takes a `module:attribute` path to a `Web` instance (no `run`/`lint` subcommands).
 
 ```bash
-pie web run     # start the FastAPI server
-pie web lint    # lint the application
-pie self-upgrade  # upgrade pie to latest version
+pie web app:web          # run the app (module `app`, attribute `web`)
+pie web app:web verify   # lint / verify the application
+pie web app:web build    # build static JSON from the Web app
+pie init                 # set up pie in an existing project + link a frontend
+pie self-upgrade         # upgrade pie; --pm uv|poetry|pip to force the manager
 ```
+
+---
+
+### 4.12 Other command groups
+
+These exist on the `pie` CLI; see the cheatsheets for full flags.
+
+```bash
+# Centrifuge channels & events (backend-only — no pieui mirror)
+pie card channels [app:web] [--live] [--json]
+pie card emit <Card> <event> <channel> [--data '{}'] [--web app:web]
+
+# Remote (complete surface)
+pie card remote history|public|private|remove <Card>
+
+# Pages
+pie page view <path>
+pie page ajax <path> add|remove <handler>
+
+# Task runner
+pie taskrun local|remote app:web <page> <action> [params...]
+
+# Cloudflare Python Worker (backend-only — needs pieui[cloudflare-worker])
+pie cloudflare init|dev|deploy
+```
+
+**`pie db …`** — the Beanie/MongoDB layer (Documents, indexes, seeds, document↔card
+bridges, migrations). Backend-only, **no `pieui db` mirror**. Full reference:
+`skills/pie-cli/references/db-cheatsheet.md`.
+
+```bash
+pie db init                 # scaffold the db layer
+pie db status               # ping Mongo, list collections + counts
+pie db model add User --field email:str --timestamps --index email,unique
+pie db migrate              # run migrations forward
+```
+
+See also [§10 Previewing & Rendering Cards](#10-previewing--rendering-cards) for `pie card show` / `pie card show-mcp`.
 
 ---
 
