@@ -16,6 +16,8 @@ Use this skill when the user asks to run, debug, or automate the `pie` CLI.
 - `pie web ...`, `verify`, `build`
 - `pie page add|view`
 - `pie card add|list|view|list-events|push|pull|remote list|remote pull`
+- `pie card show` — preview one card in the frontend registry harness
+- `pie card show-mcp` — headless MCP render server (JSON/HTML/screenshot + ajax)
 - `pie login`
 
 ## Card types
@@ -57,11 +59,21 @@ Required env for remote/storage flows:
 4. For remote sync, validate user/project context before mutating.
 5. Summarize outputs and next action.
 
+## Previewing / rendering a card
+
+Render a single card in isolation through the frontend's **registry-dev harness** (a standalone `PiePreviewRoot` Next app under `<frontend>/.pie/registry/`). The backend serves the card envelope at `/api/content/`; the harness fetches and renders it.
+
+- `pie card show EXPR` — serve one card from an ephemeral backend and open it in the harness. `EXPR` is a Python expression evaluating to a `Card`; the eval namespace includes every `Card` subclass in `pages/components/*.py`. Flags: `--frontend-dir`, `--frontend-port` (default `3000`), `--backend-port` (auto), `--route` (default `/`), `--pm`, `--no-open`. Blocks until Ctrl+C.
+- `pie card show-mcp` — a FastMCP server that renders cards headlessly for agents. Requires `pip install 'pieui[mcp]'` (adds `mcp` + `playwright`). Flags: `--http PORT` (default stdio), `--frontend-dir`, `--frontend-port` (default `3000`), `--mirror URL`, `--no-frontend`. Tools: `render_card(card?, format=json|html|screenshot)`, `attach(base_url)`, `detach()`, `list_ajax()`, `call_ajax(pathname, data?)`. For `render_card`, prefer a **card expression** over a `{…}` JSON string (the latter is often coerced to a dict and rejected); `format=json` echoes content, `html`/`screenshot` need the harness + linked frontend (`pie init`).
+
+Both depend on `frontendProjectDir` in `.pie/config.json` (or `--frontend-dir`). See the complete guide's section 10 for the full architecture, side-panel recipe, and troubleshooting (e.g. clear `<frontend>/.pie/registry/.next` if a stale CSS/build error persists).
+
 ## Safety Rules
 
 - `pie card add-event` is currently not implemented for Python source editing; do not promise automatic implementation.
 - For `card push`/`pull`, validate target names and paths before writes.
 - For `page add`, ensure `web.py` registration remains valid.
+- `card show` / `card show-mcp` spawn a frontend `next dev`; if the user runs their own dev server on that port, confirm before replacing it.
 
 ## References
 

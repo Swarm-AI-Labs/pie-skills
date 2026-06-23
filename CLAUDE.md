@@ -8,6 +8,7 @@ This repository provides two CLI skills for the Pie ecosystem.
 |---|---|
 | Working with Python `pie` CLI, `uv run pie`, backend cards/pages | `pie-cli` |
 | Working with TypeScript `pieui` CLI, `bunx pieui`, Next.js components | `pieui-cli` |
+| Previewing / rendering a single card (`pie card show`, `pieui registry dev`, `pie card show-mcp` MCP) | both — see complete guide §10 |
 
 ## Key differences
 

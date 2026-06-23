@@ -1,9 +1,9 @@
 ---
 name: pie-pieui-complete
-description: Full reference for building projects with the PIE framework using both pie (Python backend) and pieui (TypeScript/Next.js frontend) CLIs. Covers scaffolding, remote sync, envelope policy, workflow recipes, check-sync interpretation, and common edge cases.
+description: Full reference for building projects with the PIE framework using both pie (Python backend) and pieui (TypeScript/Next.js frontend) CLIs. Covers scaffolding, remote sync, envelope policy, workflow recipes, check-sync interpretation, previewing & rendering cards (pie card show, pieui registry harness, pie card show-mcp), and common edge cases.
 metadata:
   author: J4h5u5
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # PIE + pieUI — Complete Agent Skill Guide
@@ -24,6 +24,7 @@ Covers both CLIs, all commands, workflow recipes, envelope policy, and edge case
 7. [Edge Cases](#7-edge-cases)
 8. [Project Setup & .gitignore](#8-project-setup--gitignore)
 9. [check-sync Findings Guide](#9-check-sync-findings-guide)
+10. [Previewing & Rendering Cards](#10-previewing--rendering-cards)
 
 ---
 
@@ -869,3 +870,127 @@ npm-debug.log*
 | Field in TS but **not** in Python | Missing field in backend dataclass | **Fix** — add to `pages/components/my_card.py` |
 | Field in Python but **not** in TS (non-framework field) | Missing field in TS interface | **Fix** — add to `piecomponents/MyCard/types/index.ts` |
 | Completely incompatible types (e.g. `string` vs `number`) | Real contract mismatch | **Fix** — align types on both sides |
+
+---
+
+## 10. Previewing & Rendering Cards
+
+PIE can render **one card in isolation** — without wiring it into a full app — for visual review, screenshots, or agent-driven inspection. Three surfaces share one mechanism.
+
+### 10.1 How it works
+
+```
+  pie (backend)                          pieui (frontend)
+  ┌────────────────────────┐  HTTP GET   ┌───────────────────────────┐
+  │ ephemeral Web app      │ ◀────────── │ registry-dev harness       │
+  │  /api/content/         │  /api/...   │  (PiePreviewRoot,          │
+  │  /api/ajax_content/…   │ ──────────▶ │   no app layout)           │
+  │  serves ONE card JSON  │             │  fetches /api/content/,    │
+  └────────────────────────┘             │  renders card by name from │
+                                         │  piecomponents/registry.ts │
+                                         └───────────────────────────┘
+```
+
+- The **backend** (`pie`) serves the card envelope `{ "card": "<Name>", "data": { … } }` at `/api/content/`, plus a print-and-echo stub for every ajax `pathname` at `/api/ajax_content/<path>`.
+- The **frontend** is the **registry-dev harness**: a standalone Next app (`pieui registry dev`) generated under `<frontend>/.pie/registry/`. It mounts `PiePreviewRoot` (no app chrome), reads `PIE_API_SERVER`, fetches `/api/content/`, and renders the matching component from `piecomponents/registry.ts`.
+- The card name in the content JSON **must** be registered on the frontend (created via `pieui card add`), and the `data` keys must be **camelCase** matching the TS props.
+
+### 10.2 `pie card show` — interactive preview (human-facing)
+
+Serves one card from an ephemeral backend and opens it in the harness. Blocks until Ctrl+C; always tears down the frontend process.
+
+```bash
+pie card show 'ProfileCard(name="p", title="Hi")'
+pie card show 'ColCard([ACard(), BCard(a=1)])' --frontend-port 3210 --route /
+```
+
+`EXPR` is a Python expression that evaluates to a `Card`. The eval namespace = framework `Card` subclasses **plus every `Card` subclass in the backend's `pages/components/*.py`**. Any card carrying a `pathname` gets a print-only ajax stub auto-registered, so ajax cards respond out of the box.
+
+| Flag | Default | Description |
+|---|---|---|
+| `--frontend-dir` | `frontendProjectDir` from `.pie/config.json` | Frontend project to render with |
+| `--frontend-port` | `3000` | Port for the registry-dev harness |
+| `--backend-port` | auto (free port) | Port for the ephemeral backend |
+| `--route` | `/` | Frontend route to open |
+| `--pm` | autodetect | Package manager (bun/pnpm/yarn/npm) |
+| `--no-open` | off | Do not open a browser automatically |
+
+### 10.3 `pieui registry dev|build` — the harness itself
+
+```bash
+pieui registry dev --port 3939 --api-server http://127.0.0.1:8000/
+pieui registry build --out public/pie-registry
+```
+
+- `registry dev [--port N] [--api-server URL]` — runs the standalone `PiePreviewRoot` harness pointed at a backend's `/api/content/`. This is what `pie card show` and the MCP spawn internally; run it by hand only to debug the harness or to drive it from your own backend.
+- `registry build [--out DIR]` — static-export the harness so `pie` can serve it directly (`disable_serving=False`).
+- Generated under `<frontend>/.pie/registry/` — a **separate Next app with its own `.next` build cache** (see Troubleshooting).
+
+### 10.4 `pie card show-mcp` — headless rendering for agents (MCP)
+
+A FastMCP server that renders cards headlessly (JSON / HTML / screenshot) and exposes their ajax — so AI agents can inspect cards without a human browser. Install extras: `pip install 'pieui[mcp]'` (adds `mcp` + `playwright`).
+
+```bash
+pie card show-mcp                                  # stdio transport (default)
+pie card show-mcp --http 9009                      # streamable-HTTP on :9009
+pie card show-mcp --frontend-port 3939             # harness port
+pie card show-mcp --mirror http://127.0.0.1:8000   # mirror a live `pie card show` backend
+pie card show-mcp --no-frontend                    # json + ajax tools only (no browser)
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--http PORT` | stdio | Serve over streamable-HTTP instead of stdio |
+| `--frontend-dir` | config | Frontend project dir |
+| `--frontend-port` | `3000` | registry-dev harness port |
+| `--mirror URL` | — | Mirror a running `pie card show` backend |
+| `--no-frontend` | off | Skip frontend + browser; only `render_card(json)` + ajax tools |
+
+**MCP tools:**
+
+| Tool | Purpose |
+|---|---|
+| `render_card(card?, format)` | Render a card. `card` = a Python **expression** evaluating to a `Card`, or a content-**JSON string**. `format` = `json` (echo content) \| `html` \| `screenshot`. |
+| `attach(base_url)` | Mirror a running `pie card show` backend at `base_url`. |
+| `detach()` | Stop mirroring; render local cards again. |
+| `list_ajax()` | List ajax `pathname`s on the current card. |
+| `call_ajax(pathname, data?)` | POST to a running ajax endpoint and return its content. |
+
+Notes:
+- `format=json` only **echoes** the content envelope (no browser needed). `html` / `screenshot` need the running harness, a linked frontend (`pie init`), and Playwright.
+- **Prefer the expression form for `card`.** A `{ … }` JSON string is frequently coerced to a dict by the MCP arg layer and rejected — pass an expression like `ProfileCard(name="p", …)` instead. The eval namespace includes any `Card` subclass in the backend's `pages/components/`.
+- Register it as an MCP server (Claude Code / Cursor / Codex) with a small launcher that pins the backend project and `pie` on `PYTHONPATH`:
+  ```bash
+  #!/usr/bin/env bash
+  cd /path/to/backend-project
+  PYTHONPATH=/path/to/pie exec ./.venv/bin/python -m pie card show-mcp --frontend-port 3939 "$@"
+  ```
+
+### 10.5 Showing the harness in an agent's side panel
+
+To display the live harness inside a host with a web-preview panel (e.g. Claude Code's `preview_*`):
+
+1. Set the card via `render_card` first, so the backend serves it at `/api/content/`.
+2. Find the backend port — the `show-mcp` process's listening port whose `/api/content/` returns your card.
+3. Launch the harness as a **managed** preview server. Preview tools won't reuse an externally-started server, and launch configs may lack a `cwd` field — so use a shell wrapper and an auto-assigned port:
+   ```json
+   {
+     "name": "pie-registry",
+     "runtimeExecutable": "bash",
+     "runtimeArgs": ["-lc", "cd <frontend> && exec pieui registry dev --port \"$PORT\" --api-server http://127.0.0.1:<backend>/"],
+     "autoPort": true
+   }
+   ```
+
+### 10.6 Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Persistent `Parsing CSS source code failed` / stale build error in the preview **after** the source is already fixed | The harness keeps its **own** Turbopack/Next cache at `<frontend>/.pie/registry/.next`; clearing the main app `.next` does nothing | `rm -rf <frontend>/.pie/registry/.next`, then restart the harness |
+| `pieui registry …` prints the general help / acts like an unknown command | The project-local `node_modules/.bin/pieui` predates `registry`; the harness resolves project-local first | Use the **global** `pieui` (e.g. `~/.bun/bin/pieui`) or run `pieui self-upgrade` |
+| Preview shows the **full app** or a loading splash instead of the bare card | The harness never started (often the missing `registry` command above) and something fell back to a plain `next dev` on that port | Confirm a `pieui registry dev` process is actually serving the port |
+| `render_card` rejects the card with a dict/validation error | A `{ … }` JSON string was coerced to a dict | Pass a **card expression** instead |
+| `html` / `screenshot` returns "needs a linked frontend" | No Playwright, or no linked frontend | `pip install 'pieui[mcp]'` and `pie init` to link the frontend |
+| Card renders blank / "unknown card" | Name not in frontend `registry.ts`, or `data` keys are snake_case | `pieui card add <Name>`; use camelCase `data` keys |
+
+**Heads up:** killing/clearing a preview harness restarts a `next dev`. If the user runs their own dev server on that port, confirm before replacing it.
