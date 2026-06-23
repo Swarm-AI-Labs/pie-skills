@@ -110,8 +110,8 @@ Use `pie-cli` when the user is working in a Python Pie project — either the `p
 
 | Requirement | Detail |
 |---|---|
-| Python | `>= 3.14` |
-| uv | Install deps with `uv sync --python 3.14` |
+| Python | `>= 3.10` (the pie repo pins 3.14 for dev) |
+| uv | Install deps with `uv sync` |
 | `.env` file | Required for any remote storage or auth command |
 
 Required environment variables for remote and storage flows:

@@ -12,13 +12,20 @@ Use this skill when the user asks to run, debug, or automate the `pie` CLI.
 
 ## Scope
 
-- `pie create`
-- `pie web ...`, `verify`, `build`
-- `pie page add|view`
-- `pie card add|list|view|list-events|push|pull|remote list|remote pull`
+- `pie create`, `pie init`, `pie self-upgrade`
+- `pie web <module:attr> [verify|build]`
+- `pie page add|view|ajax`
+- `pie card add|list|view|list-events|add-event|dump-metadata|check-sync`
+- `pie card channels|emit` (Centrifuge; backend-only)
+- `pie card pull` and `pie card remote list|push|pull|history|public|private|remove`
 - `pie card show` — preview one card in the frontend registry harness
 - `pie card show-mcp` — headless MCP render server (JSON/HTML/screenshot + ajax)
+- `pie db …` — Beanie/MongoDB layer (Documents, indexes, seeds, bridges, migrations) — see `references/db-cheatsheet.md`
+- `pie cloudflare init|dev|deploy` — Cloudflare Python Worker
+- `pie taskrun local|remote …` — run a generated page task
 - `pie login`
+
+**Backend-only — no `pieui` mirror:** `db`, `cloudflare`, `card channels`, `card emit`. Never suggest a `pieui db` / `pieui cloudflare` equivalent.
 
 ## Card types
 
@@ -31,7 +38,9 @@ The `pie card add` command accepts four types:
 | `container` | Container card with a single content slot |
 | `complex-container` | Container with an array content slot (most powerful) |
 
-Use `--io` to add socket IO support, `--ajax` to add AJAX support. Both flags are optional and combinable.
+Use `--io` to add socket IO support, `--ajax` to add AJAX support, and `--input` for the typed `stored` (input) variant. Flags are optional and combinable. `--from <ref>` ports a card from frontend piecomponents / a PieMetadata `.json` / a `.py` file / a card name.
+
+**Naming divergence:** pie's `container` type is called `simple-container` in the frontend `pieui` CLI.
 
 ## Defaults
 
@@ -41,7 +50,7 @@ Use `--io` to add socket IO support, `--ajax` to add AJAX support. Both flags ar
 
 ## Prerequisites Checklist
 
-1. Python `>=3.14`.
+1. Python `>=3.10` (pyproject minimum; the pie repo pins 3.14 for dev).
 2. Dependencies installed with `uv sync`.
 3. `.env` loaded when storage or auth is involved.
 
@@ -74,9 +83,11 @@ Both depend on `frontendProjectDir` in `.pie/config.json` (or `--frontend-dir`).
 - For `card push`/`pull`, validate target names and paths before writes.
 - For `page add`, ensure `web.py` registration remains valid.
 - `card show` / `card show-mcp` spawn a frontend `next dev`; if the user runs their own dev server on that port, confirm before replacing it.
+- `pie db model remove|rename`, `pie db migrate|rollback`, and `card remote remove|public|private` mutate code/data/visibility — confirm explicit intent before running.
 
 ## References
 
 Read command details in:
 
-- `references/command-cheatsheet.md`
+- `references/command-cheatsheet.md` — all command groups
+- `references/db-cheatsheet.md` — the full `pie db …` (Beanie/MongoDB) surface

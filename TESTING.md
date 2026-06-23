@@ -32,10 +32,10 @@ git
 ### pie (Python) requirements
 
 ```bash
-python >= 3.14
-uv                  # pip install uv
+python >= 3.10       # pyproject requires-python = ">=3.10"; pie repo pins 3.14 for dev
+uv                   # pip install uv
 cd /path/to/pie
-uv sync --python 3.14
+uv sync
 ```
 
 Required `.env` for remote tests:
@@ -312,7 +312,7 @@ For each prompt below, confirm the agent reads `pie-cli/SKILL.md` or `pieui-cli/
 
 ## T4 — pie CLI smoke tests
 
-Run from inside the `pie` repository with `uv sync --python 3.14` already done.
+Run from inside the `pie` repository with `uv sync` already done.
 
 ### T4-01 — Run existing unit test suite
 
@@ -413,6 +413,32 @@ uv run pie page view dashboard
 ```bash
 uv run pie card add-event SimpleCard on_click 2>&1
 # Expected: prints a message about not being implemented — does NOT crash with unhandled exception
+```
+
+---
+
+### T4-10 — `pie db` smoke (Beanie/MongoDB layer)
+
+```bash
+cd /tmp/smoke-test-app
+uv run pie db init
+uv run pie db model add User --field email:str --timestamps --index email,unique
+uv run pie db model list                  # Expected: lists User — no stack trace
+uv run pie db check                        # static checks, no live DB needed
+# Commands needing a live Mongo (status/shell/seed run/migrate) are covered in T7 / manual.
+```
+
+---
+
+### T4-11 — preview / render & other groups (help-level smoke)
+
+```bash
+uv run pie card show --help        # EXPR + --frontend-port/--backend-port/--route/--no-open
+uv run pie card show-mcp --help    # --http/--frontend-port/--mirror/--no-frontend
+uv run pie taskrun --help          # local|remote ...
+uv run pie cloudflare --help       # init|dev|deploy
+uv run pie card channels --help    # --live/--json
+# Expected: each prints usage with no stack trace.
 ```
 
 ---
@@ -545,6 +571,18 @@ cat dist/pieui.components.json
 
 ---
 
+### T5-11 — `pieui registry` & `card pull` (help-level smoke)
+
+```bash
+bunx pieui registry dev --help     # --port / --api-server
+bunx pieui registry build --help   # --out
+bunx pieui card pull --help        # ref: Name | project/Name | r/user/Name
+# Expected: each prints usage with no stack trace.
+# A full registry render is exercised via `pie card show` (see complete guide §10).
+```
+
+---
+
 ## T6 — Card generation accuracy
 
 These tests verify that generated card files match the structure implied by the skill documentation.
@@ -666,6 +704,17 @@ bunx pieui card remote list
 ## T8 — Agent accuracy checks
 
 These tests verify that what the SKILL.md tells agents to do actually works when executed.
+
+### T8-00 — Cheatsheet coverage drift check
+
+```bash
+bash scripts/check-cheatsheet-sync.sh
+# Reads `pie --help` top-level commands (skipped if pie not on PATH) + a curated
+# pieui command list, and warns about any not present in the cheatsheets.
+# Advisory (always exits 0); investigate any "possible gap" lines.
+```
+
+---
 
 ### T8-01 — Every command in pie cheatsheet exits successfully
 

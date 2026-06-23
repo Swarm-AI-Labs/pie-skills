@@ -28,6 +28,7 @@ Four card types: `simple`, `complex`, `simple-container`, `complex-container` (d
 
 ```bash
 bunx pieui init
+bunx pieui init --out-dir packages/app   # -o; base dir for piecomponents (default: .)
 
 # simple — only a data prop
 bunx pieui card add simple StatusCard
@@ -69,7 +70,15 @@ bunx pieui card view StatusCard
 bunx pieui card list-events StatusCard
 bunx pieui card add-event StatusCard refresh
 bunx pieui card remove StatusCard
+
+# pull a card by reference (current project / another project / public alias);
+# distinct from `card remote pull` below
+bunx pieui card pull StatusCard
+bunx pieui card pull other-proj/StatusCard
+bunx pieui card pull r/alice/StatusCard
 ```
+
+`card list`, `list-events`, and `add-event` accept `--src-dir <dir>` / `-s <dir>` (default `.`).
 
 ## Storybook previews
 
