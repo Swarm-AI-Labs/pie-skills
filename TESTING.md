@@ -667,6 +667,17 @@ bunx pieui card remote list
 
 These tests verify that what the SKILL.md tells agents to do actually works when executed.
 
+### T8-00 — Cheatsheet coverage drift check
+
+```bash
+bash scripts/check-cheatsheet-sync.sh
+# Reads `pie --help` top-level commands (skipped if pie not on PATH) + a curated
+# pieui command list, and warns about any not present in the cheatsheets.
+# Advisory (always exits 0); investigate any "possible gap" lines.
+```
+
+---
+
 ### T8-01 — Every command in pie cheatsheet exits successfully
 
 ```bash
