@@ -119,7 +119,14 @@ bunx pieui registry build
 bunx pieui registry build --out public/pie-registry
 ```
 
-The registry harness is generated under `.pie/registry/` and mounts `PiePreviewRoot` without the app layout.
+The registry harness is generated under `.pie/registry/` and mounts `PiePreviewRoot` without the app
+layout. It renders whatever card a `pie` backend serves at `--api-server`'s `/api/content/` — pair it
+with `pie card show <EXPR>` or `pie card show-mcp` (see the pie-cli cheatsheet and complete-guide §10).
+
+- The harness has its **own `.next`** under `.pie/registry/`. Stale CSS/build error after fixing
+  source → `rm -rf .pie/registry/.next` and restart.
+- If `registry` is reported as unknown, the project-local `pieui` is too old — use the global
+  `pieui` (`~/.bun/bin/pieui`) or `pieui self-upgrade`.
 
 ## Build manifest
 

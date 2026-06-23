@@ -55,6 +55,31 @@ uv run pie page add admin/users
 uv run pie page view dashboard
 ```
 
+## Preview / render a card
+
+```bash
+# Interactive: serve one card from an ephemeral backend + open the registry harness.
+# EXPR evaluates to a Card; namespace includes pages/components/*.py card classes.
+uv run pie card show 'MyCard(name="m", title="Hi")'
+uv run pie card show 'ColCard([ACard(), BCard(a=1)])' --frontend-port 3210 --route /
+#   flags: --frontend-dir --frontend-port(3000) --backend-port(auto) --route(/) --pm --no-open
+
+# Headless MCP render server for agents (needs: pip install 'pieui[mcp]').
+uv run pie card show-mcp                                # stdio (default)
+uv run pie card show-mcp --http 9009                    # streamable-HTTP
+uv run pie card show-mcp --mirror http://127.0.0.1:8000 # mirror a live `pie card show`
+uv run pie card show-mcp --no-frontend                  # json + ajax tools only
+#   MCP tools: render_card(card?, format=json|html|screenshot), attach(url), detach(),
+#              list_ajax(), call_ajax(pathname, data?)
+#   render_card: prefer a card EXPRESSION over a {…} JSON string (JSON is often
+#   coerced to a dict and rejected). format=json echoes; html/screenshot need the
+#   harness + a linked frontend (`pie init`).
+```
+
+The frontend side is `pieui registry dev|build` (the `PiePreviewRoot` harness under
+`<frontend>/.pie/registry/`, with its **own `.next`** cache). If a stale CSS/build
+error persists after fixing source: `rm -rf <frontend>/.pie/registry/.next` and restart.
+
 ## Auth
 
 ```bash

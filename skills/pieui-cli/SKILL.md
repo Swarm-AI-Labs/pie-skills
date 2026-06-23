@@ -53,8 +53,16 @@ Use `--from <ref>` to port a component from backend Pie metadata. `<ref>` may be
 
 ## Preview registry
 
-- `pieui registry dev [--port N] [--api-server URL]` runs the standalone `PiePreviewRoot` harness for local preview/debugging.
+- `pieui registry dev [--port N] [--api-server URL]` runs the standalone `PiePreviewRoot` harness (no app layout). It fetches the card envelope from `--api-server`'s `/api/content/` and renders the matching component from `piecomponents/registry.ts`. This is the frontend half of `pie card show` and `pie card show-mcp`.
 - `pieui registry build [--out DIR]` builds the harness as a static export for serving by backend `pie`.
+- The harness is generated under `<project>/.pie/registry/` and is a **separate Next app with its own `.next` build cache** — independent of the main app's `.next`.
+- To render a card: a `pie` backend must serve it (run `pie card show <EXPR>`, or set it via the `pie card show-mcp` MCP). The card name in the content JSON must exist in `registry.ts`; `data` keys are camelCase. See the complete guide (`skills/SKILL.md`, section 10) for the end-to-end flow and the agent side-panel recipe.
+
+**Preview troubleshooting:**
+
+- Persistent `Parsing CSS source code failed` / stale build error after the source is fixed → the harness's own cache is stale: `rm -rf <project>/.pie/registry/.next` and restart (clearing the main app `.next` does nothing).
+- `pieui registry …` prints general help / acts unknown → the project-local `pieui` predates `registry`; use the **global** `pieui` (e.g. `~/.bun/bin/pieui`) or `pieui self-upgrade`.
+- Preview shows the full app / a loading splash instead of the bare card → the harness didn't start and something fell back to a plain `next dev`; verify a `pieui registry dev` process owns the port.
 
 ## Defaults
 
