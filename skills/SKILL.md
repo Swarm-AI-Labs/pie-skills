@@ -153,11 +153,11 @@ pieui page add chat/room
 ### 3.5 `card add`
 
 ```bash
-pieui card add [type] <ComponentName> [--io] [--ajax]
+pieui card add [type] <ComponentName> [--io] [--ajax] [--input] [--from <ref>]
 ```
 
 Scaffolds `piecomponents/<ComponentName>/` with `index.ts`, `types/index.ts`, `ui/<ComponentName>.tsx`.
-Updates `piecomponents/registry.ts` automatically.
+Updates `piecomponents/registry.ts` automatically. (pie's matching `container` type is `simple-container` here.)
 
 **Types:**
 
@@ -174,6 +174,8 @@ Updates `piecomponents/registry.ts` automatically.
 |---|---|
 | `--ajax` | `pathname`, `depsNames`, `kwargs` fields to the data interface |
 | `--io` | Realtime / websocket support fields |
+| `--input` | Generates an `InputPie*ComponentProps` card with a typed `stored` prop |
+| `--from <ref>` | Port from backend: a `.py` file, a PieMetadata `.json`, or a card name (auto-resolves via `.pie/config.json` `backendComponentsDir`) |
 
 ```bash
 pieui card add simple ProfileCard
@@ -181,6 +183,8 @@ pieui card add complex-container LayoutCard
 pieui card add simple LiveTickerCard --io
 pieui card add simple ContactFormCard --ajax
 pieui card add simple ChatCard --io --ajax
+pieui card add simple StoredFormCard --input
+pieui card add MyCard --from ../backend/pages/components/my_card.py
 ```
 
 ---
@@ -361,6 +365,35 @@ Deletes the component from the platform (all revisions). Does not touch local fi
 
 ---
 
+### 3.17 Other commands
+
+Also on the `pieui` CLI; see `skills/pieui-cli/references/command-cheatsheet.md` for flags.
+
+```bash
+pieui self-upgrade [--pm bun|npm|pnpm|yarn]   # upgrade the global CLI
+
+# Pull a card by reference (distinct from `card remote pull`)
+pieui card pull <Name>            # current project
+pieui card pull other-proj/<Name> # another project of the same user
+pieui card pull r/<user>/<Name>   # public alias
+
+# Metadata / sync
+pieui card dump-metadata <Name> [--out file.json]   # { "typescript": … } envelope
+pieui card check-sync <Name>                         # delegates to backend `pie card check-sync`
+
+# Storybook previews
+pieui card add-story <Name> [--force]
+pieui card generate-preview <Name> [--out file.png]  # storycap PNG; starts Storybook on :6006 if needed
+
+# Preview registry harness (frontend half of `pie card show` / `show-mcp`)
+pieui registry dev [--port N] [--api-server URL]     # standalone PiePreviewRoot, no app layout
+pieui registry build [--out DIR]                     # static export served by `pie`
+```
+
+See [§10 Previewing & Rendering Cards](#10-previewing--rendering-cards) for the full preview/render flow.
+
+---
+
 ## 4. pie CLI — All Commands
 
 ### 4.1 Auth
@@ -396,14 +429,18 @@ pie page add wallet/send
 ### 4.3 `card add`
 
 ```bash
-pie card add [type] <ComponentName>
+pie card add [type] <ComponentName> [--io] [--ajax] [--input] [--from <ref>]
 ```
 
-Creates `pages/components/<snake_name>.py` with a `Card` dataclass.
+Creates `pages/components/<snake_name>.py` with a `Card` dataclass. Types: `simple`,
+`complex`, `container`, `complex-container` (the frontend calls `container` →
+`simple-container`). `--from` ports from a frontend card / metadata / `.py` / card name.
 
 ```bash
 pie card add simple ProfileCard
 pie card add complex ChatCard
+pie card add container LayoutCard
+pie card add complex-container BigCard --io --ajax
 ```
 
 **When:** Same time as `pieui card add` — both sides must exist.
