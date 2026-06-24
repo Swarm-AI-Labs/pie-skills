@@ -1,6 +1,6 @@
 {
   "author": "pie-team",
-  "version": "1.1.1",
-  "description": "TypeScript pieui CLI — Next.js bootstrapping, card/page generation, Storybook previews, TS/Python metadata sync, preview registry, remote sync, debug logging, self-upgrade, and auth.",
-  "tags": ["typescript", "bun", "pieui", "cli", "nextjs", "cards", "pages", "storybook", "metadata", "registry", "debug"]
+  "version": "1.2.0",
+  "description": "TypeScript pieui CLI — Next.js bootstrapping, card/page generation, Storybook previews, TS/Python metadata sync, preview registry, remote sync, debug logging, self-upgrade, and auth. Plus PieUI style isolation: fix cards in the component, not global CSS.",
+  "tags": ["typescript", "bun", "pieui", "cli", "nextjs", "cards", "pages", "storybook", "metadata", "registry", "debug", "css", "style-isolation"]
 }
